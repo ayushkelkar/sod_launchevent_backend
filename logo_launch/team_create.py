@@ -1,6 +1,21 @@
-# This is for creating a team for the logo launch event
+# This is for creating a team for the event
+# Endpoint Details:
+"""
+Type: POST
+Endpoint: /api/auth/register
+"""
 import sqlite3
 import os
+"""
+JSON Payload Example:
+{
+  "teamName":       "Quantum Wolves",
+  "leaderUsername": "qwolf_lead",
+  "password":       "plaintext123",   // backend hashes with bcrypt
+  "members":        ["Alice", "Bob"]  // optional, can be empty array
+}
+
+"""
 
 def create_team(payload):
     # Path to DB
@@ -8,8 +23,12 @@ def create_team(payload):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    team_name = payload['team_name']
+    # Defining environment variables
+    team_name = payload['teamName']
+    leader = payload['leaderUsername']
+    password = payload['password']
     members = payload['members']
+
 
     # Check if team exists
     cursor.execute("SELECT team_id FROM teams WHERE team_name = ?", (team_name,))
