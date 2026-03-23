@@ -8,7 +8,7 @@ from logo_launch.team_create import create_team
 
 app = Flask(__name__)
 
-@app.route('/teams/create', methods=['POST'])
+@app.route('/api/auth/register', methods=['POST'])
 def teams_create():
     # Get JSON payload from request
     payload = request.get_json()
