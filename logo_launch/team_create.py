@@ -55,8 +55,28 @@ def create_team(payload):
             user_id = cursor.lastrowid
         cursor.execute("INSERT INTO team_members (team_id, user_id) VALUES (?, ?)", (team_id, user_id))
     """
-
-    # Insert 
+    # Adding the Leader
+    cursor.execute("SELECT user_id FROM users WHERE username = ?", (payload["leaderUsername"],))
+    leader = cursor.fetchone()
+    if leader:
+        leader_id = leader[0]
+        conn.close()
+        return { "message": "Username already taken" }, 409 # HTTP 409 username already taken. Same logic for users as well.
+    else:
+        cursor.execute("INSERT INTO users (username, role) VALUES (?, ?)", (payload["leaderUsername"], "leader"))
+        leader_id = cursor.lastrowid
+    cursor.execute("INSERT INTO team_members (team_id, user_id, role) VALUES (?, ?, ?)",(team_id, leader_id, "leader"))
+    
+    # Insert users in users
+    for username in members:
+        cursor.execute("SELECT user_id FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        if user:
+            conn.close()
+            return { "message": "Username already taken" }, 409 # HTTP 409 username already taken
+        else:
+            cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+            user_id = cursor.lastrowid
 
     conn.commit()
     conn.close()
