@@ -44,19 +44,19 @@ def teams_check(cursor, username, password):
 def jwtthing(payload):
     d1 = payload
     d1['exp'] = datetime.datetime.now() + datetime.timedelta(hours=2)
-    return d1
+    token = jwt.encode(d1, SECRET_KEY, algorithm="HS256")
+    return token
 
 def team_login(payload):
     username = payload['username']
     password = payload['password']
     conn, cursor = cursorcall()
     user_info = teams_check(cursor, username, password)
-    d = jwtthing(payload)
-    print(d)
+    token = jwtthing(payload)
     if user_info == None:
         return {"message": "Invalid credentials"}
     response = {
-        "token": "dummy-token",
+        "token": token,
         "user": user_info
         }
     return response
