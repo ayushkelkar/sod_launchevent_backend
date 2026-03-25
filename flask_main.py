@@ -28,5 +28,11 @@ def login():
     result = team_login(payload)
     return jsonify(result)
 
+# This is the event enabled status part:
+@app.route('/api/quiz/status', methods=['GET'])
+def status():
+    payload = { "enabled": True } # This is a bool value
+    return jsonify(payload)
+
 if __name__ == '__main__':
     app.run(debug=True)
