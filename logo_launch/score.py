@@ -50,17 +50,33 @@ def is_in_db(cursor, username):
     else:
         return False
 
+def getuserid(cursor, username):
+    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    if row:
+        userid = row["id"]
+        print(userid)
+        return userid
+
 def team_score(payload):
     auth_header = request.headers.get("Authorization")
+    print(auth_header)
     if auth_header:
         parts = auth_header.split()
         if len(parts) == 2 and parts[0].lower() == "bearer":
             token = parts[1].strip()  # this is the actual JWT
+            print(token)
         else:
             token = None
     else:
         token = None
     userdetails = decodejwt(token)
+    print(userdetails)
     conn, cursor = cursorcall()
     username  = userdetails["username"]
+    userid = getuserid(cursor, username)
     yesorno = is_in_db(cursor, username) # So this is the authentication part. True if user exists in the db, False otherwise.
+    if yesorno is True:
+        score = payload["score"]
+        cursor.execute("INSERT INTO scores (user_id, score) VALUES (?, ?)", (userid, score))
+        conn.commit()
