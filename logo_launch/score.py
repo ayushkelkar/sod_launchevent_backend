@@ -1,5 +1,7 @@
 from flask import request
+from logo_launch.teams_creation import cursorcall
 import jwt
+import time
 # This is for saving team scores and shit after quiz completion
 # Endpoint: /api/quiz/score
 # Type: POST
@@ -15,14 +17,50 @@ import jwt
 # Let the secret key also be here. I'll implement it as it should be once this shit actually works.
 SECRET_KEY = "I don't know what the hell to put here"
 
+# The following function is a prototype for exception handling. I don't know try-except, so its commented out. I won't use this for now.
+"""
 def decodejwt(token):
-    originalpayload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    return originalpayload
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+        print(decoded)
+    except jwt.InvalidTokenError:
+        decoded = None  # invalid token at all
+        is_expired = True  # treat invalid as expired / not valid
+    else:
+        # check expiration manually
+        exp = decoded.get("exp")
+        if exp is None or exp < int(time.time()):
+            is_expired = True
+        else:
+            is_expired = False
+    return is_expired
+"""
+
+def decodejwt(token):
+    decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    # So now we have the original payload that flask gets I guess.
+    return decoded
+
+# Will check if the username is present in the users table. Not exactly good compared to using jwt implementations, but it works, barely.
+def is_in_db(cursor, username):
+    cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    if(user["username"] == username):
+        return True
+    else:
+        return False
 
 def team_score(payload):
-    auth_header = request.headers.get("Authorization") # Extracting the Authorization Header
-    if auth_header != None:
-        token = auth_header.split(" ")[1]  # strip "Bearer "
+    auth_header = request.headers.get("Authorization")
+    if auth_header:
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1].strip()  # this is the actual JWT
+        else:
+            token = None
     else:
         token = None
-    
+    userdetails = decodejwt(token)
+    conn, cursor = cursorcall()
+    username  = userdetails["username"]
+    yesorno = is_in_db(cursor, username) # So this is the authentication part. True if user exists in the db, False otherwise.
