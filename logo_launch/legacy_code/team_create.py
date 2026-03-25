@@ -1,3 +1,5 @@
+# This is deprecated. Putting it in legacy codebase for future reference.
+
 import sqlite3
 import os
 # This is for creating a team for the event
