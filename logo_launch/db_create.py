@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE,
     password_hash TEXT,
     team_id INTEGER,
-    role TEXT,
+    role TEXT DEFAULT 'member',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(team_id) REFERENCES teams(id)
 )
