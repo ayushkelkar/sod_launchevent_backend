@@ -3,11 +3,13 @@
 
 from flask import Flask, request, jsonify
 from logo_launch.teams_creation import create_team
+from logo_launch.login import team_login
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
+# This is the create teams part:
 @app.route('/api/auth/register', methods=['POST'])
 def teams_create():
     # Get JSON payload from request
@@ -17,7 +19,14 @@ def teams_create():
     result = create_team(payload)
 
     # Return the result as JSON
-    return jsonify(payload)
+    return jsonify(result)
+
+# This is the login part:
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    payload = request.get_json()
+    result = team_login(payload)
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True)

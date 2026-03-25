@@ -19,6 +19,7 @@ def cursorcall():
     pathofdb = os.path.join(os.path.dirname(__file__), 'master.db')
     conn = sqlite3.connect(pathofdb)
     conn.execute("PRAGMA foreign_keys = ON") # Better for SQLite since there are a lot of Foreign Keys
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     return conn, cursor
 
