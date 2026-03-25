@@ -35,6 +35,7 @@ def status():
     payload = { "enabled": True } # This is a bool value
     return jsonify(payload)
 
+# This is the score module
 @app.route('/api/quiz/score', methods=['POST'])
 def score():
     payload = request.get_json()

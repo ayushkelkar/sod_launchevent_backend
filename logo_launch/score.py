@@ -71,7 +71,6 @@ def team_score(payload):
     else:
         token = None
     userdetails = decodejwt(token)
-    print(userdetails)
     conn, cursor = cursorcall()
     username  = userdetails["username"]
     userid = getuserid(cursor, username)
