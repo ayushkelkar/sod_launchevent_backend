@@ -1,4 +1,4 @@
-from logo_launch.teams_creation import cursorcall
+from teams_creation import cursorcall
 import jwt
 import datetime
 # This module will handle the team login.

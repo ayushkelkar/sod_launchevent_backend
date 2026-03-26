@@ -1,5 +1,4 @@
-import sqlite3
-from logo_launch.teams_creation import cursorcall
+from teams_creation import cursorcall
 # So this is the module for the leaderboards thing.
 # Endpoint: /api/leaderboard
 # Type: GET

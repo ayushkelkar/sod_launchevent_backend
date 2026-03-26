@@ -1,5 +1,5 @@
 from flask import request
-from logo_launch.teams_creation import cursorcall
+from teams_creation import cursorcall
 import jwt
 import time
 # This is for saving team scores and shit after quiz completion
