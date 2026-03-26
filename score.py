@@ -1,7 +1,7 @@
-from flask import request
+from flask_main import request
 from teams_creation import cursorcall
 import jwt
-import time
+import os
 # This is for saving team scores and shit after quiz completion
 # Endpoint: /api/quiz/score
 # Type: POST
@@ -15,8 +15,8 @@ import time
 # { "message": "Score saved" }
 # Authorization: Bearer <token> to be used.
 # Let the secret key also be here. I'll implement it as it should be once this shit actually works.
-SECRET_KEY = "I don't know what the hell to put here"
-
+# SECRET_KEY = "I don't know what the hell to put here"
+SECRET = os.environ.get("SECRET_KEY")
 # The following function is a prototype for exception handling. I don't know try-except, so its commented out. I won't use this for now.
 """
 def decodejwt(token):
@@ -37,7 +37,7 @@ def decodejwt(token):
 """
 
 def decodejwt(token):
-    decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    decoded = jwt.decode(token, SECRET, algorithms=["HS256"])
     # So now we have the original payload that flask gets I guess.
     return decoded
 

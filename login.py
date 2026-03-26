@@ -1,6 +1,7 @@
 from teams_creation import cursorcall
 import jwt
 import datetime
+import os
 # This module will handle the team login.
 # Endpoint: /api/auth/login
 # Type: POST
@@ -23,7 +24,9 @@ import datetime
 
 # So login works with valid credentials. However, login with invalid credentials is messy, doesn't work right, and kind of weird. Will see later.
 
-SECRET_KEY = "I don't know what the hell to put here"
+# SECRET_KEY = "I don't know what the hell to put here"
+
+SECRET = os.environ.get("SECRET_KEY")
 
 def teams_check(cursor, username, password):
     cursor.execute("SELECT * FROM users WHERE username = ? AND password_hash = ?", (username, password))
@@ -44,7 +47,7 @@ def teams_check(cursor, username, password):
 def jwtthing(payload):
     d1 = payload
     d1['exp'] = datetime.datetime.now() + datetime.timedelta(hours=2)
-    token = jwt.encode(d1, SECRET_KEY, algorithm="HS256")
+    token = jwt.encode(d1, SECRET, algorithm="HS256")
     return token
 
 def team_login(payload):
