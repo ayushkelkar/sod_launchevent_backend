@@ -1,50 +1,29 @@
-# Backend for SOD Club
-This is the readme for the whole backend system.
-NOTE: "[WIP]" means "Work in Progress"
-## Files/Modules and their Functions
-### `admin_conn.py` [WIP]:
-- This handles authentication for admin access
-- This isn't for regular use
+# SOD - Logo Launch Event Backend
 
-### `backup.py` [WIP]:
-- This handles periodic database backups of all the databases on the deployed server
-- May or may not go through `flask_main`, but its up to future decision
+## `master.db`:
+- Stores 3 main databases: `teams`, `users`, and `team_members`. 
+- Details for the databases are given later.
 
-### `config.py`:
-- This is the main configuration file for the server.
-It handles the following:
-1. PostgreSQL Credentials (Port, Name, etc.)
-2. Flask settings
-3. Secret Key(s)
-4. `bcrypt` Cost Factor
+## `team_create.py`:
+- Module for team creation.
+- Frontend sends a JSON payload regarding team creation from a user, received by `flask_main` which hands it over to `team_create` which then hands it over to `db_mgmt` then `flask_main` again.
+- `flask_main` then sends an output JSON payload regarding success or failure.
 
-### `db_mgmt.py`:
-- This is the connection between the main backend server and the database server.
-- No other module is allowed access to the database server and needs to go through this module for I/O.
+## Database Schema
+### `teams`:
+- Tuples are each team's unique ID and name.
+- Attributes:
+1. `team_id` - Primary Key and auto-incremented. Gives a unique identifier for a team.
+2. `team_name` - User entered team name. Received from Frontend.
 
-### `flask_main.py`:
-- This is the main module in the server
-- It handles handshakes between frontend and the backend server, and co-ordinates every task on the server
-- Master I/O go through this module. Slave I/O may or may not.
+### `users`:
+- Master table for storage of usernames and passwords for the event.
+- Just note: Username and Password for the event will be different from the main website's login.
+- Tuples are the user's unique userid and username.
+- [WIP] Later, this will also store the team leader's password hash using bcrypt.
+- Attributes:
+1. `user_id`: Primary Key and auto-incremented. Gives a unique identifier for a user.
+2. `username`: User-entered username.
 
-### `pass_encryption.py`:
-- This handles encryption of the user passwords using the python `bcrypt` module
-- It hashes the password and hands it over to `db_mgmt` which takes it further
-- Current cost factor decided is 12. It offers a good balance between security and performance.
-- Note: Actual text of the password isn't stored in the database. Only the hash will be.
-
-### `requirements.txt`:
-- This is a text file which contains any required dependencies before running the deployment to ensure all the dependencies are met
-- Format: `package_name==version`
-
-### `utils.py`:
-- This contains helper functions which are usable across any module
-- May also contain repetitive functions used across different modules
-
-## Instructions
-### Dependencies
-- The required modules are listed in `requirements.txt`
-- Install the required modules using pip and the file using:
-```bash
-pip install -r requirements.txt
-```
+### `team_members`:
+- Table relating `team_id` and `user_id`.

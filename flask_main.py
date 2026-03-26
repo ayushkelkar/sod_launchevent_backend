@@ -2,10 +2,10 @@
 # This handles all master I/O for the backend.
 
 from flask import Flask, request, jsonify
-from logo_launch.teams_creation import create_team
-from logo_launch.login import team_login
-from logo_launch.score import team_score
-from logo_launch.leaderboard import leaderboards
+from teams_creation import create_team
+from login import team_login
+from score import team_score
+from leaderboard import leaderboards
 from flask_cors import CORS
 
 app = Flask(__name__)
