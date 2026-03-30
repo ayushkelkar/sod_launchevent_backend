@@ -36,7 +36,8 @@ def teams_create():
 def login():
     payload = request.get_json()
     result = team_login(payload)
-    return jsonify(result)
+    status_code = 200 if result.get("success") else 401
+    return jsonify(result), status_code
 
 # Event Status Module:
 @app.route('/api/quiz/status', methods=['GET'])
