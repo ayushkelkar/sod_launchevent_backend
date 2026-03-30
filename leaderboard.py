@@ -10,70 +10,27 @@ from teams_creation import cursorcall
 #   ]
 # }
 # Basically its a list of dictionaries of: {teamname, score, total (default 10), game}
-# So teamname can be gotten from the userid. Which can be indexed from the scores table.
-
-# So you can't sort and save tables in SQLite. You can print them sorted, but not save them.
-
-# This gets the userids as a list. So, we can use them to find teamids in teams.
-def get_userids(cursor):
-    cursor.execute("SELECT user_id FROM scores")
-    rows = cursor.fetchall()
-    user_ids = [row[0] for row in rows]
-    return user_ids
-
-# This now gets teamids using userids
-def get_teamids(cursor, userids):
-    # Making placeholder because idk how many userids I'll have
-    placeholders = ','.join('?' for _ in userids)
-    query = f"SELECT team_id FROM users WHERE id IN ({placeholders})"
-    cursor.execute(query, userids)
-    rows = cursor.fetchall()
-    teamids = [row[0] for row in rows]
-    return teamids
-
-# This now gets teamnames using teamids
-def get_teamnames(cursor, teamids):
-    # Again making placeholder
-    placeholders = ','.join('?' for _ in teamids)
-    query = f"SELECT team_name FROM teams WHERE id IN ({placeholders})"
-    cursor.execute(query, teamids)
-    rows = cursor.fetchall()
-    teamnames = [row[0] for row in rows]
-    return teamnames
-
-# This gets scores using userids
-def get_score(cursor, userids):
-    # Again making placeholder
-    placeholders = ','.join('?' for _ in userids)
-    query = f"SELECT score FROM scores WHERE user_id IN ({placeholders})"
-    cursor.execute(query, userids)
-    rows = cursor.fetchall()
-    scores = [row[0] for row in rows]
-    return scores
-
-# This makes the team names and scores into key-value paired dictionaries and then sorts them in decending order
-def get_dict(teamname, score):
-    combined_dict = dict(zip(teamname, score))
-    sorted_dict = dict(sorted(combined_dict.items(), key=lambda x: x[1], reverse=True))
-    return sorted_dict
-
-# This seperates the teamname-score pairs and appends total score and game type to them by each teamname-score pair for the final list of dictionaries object
-def get_payload(sorted_dict):
-    #teams = list(sorted_dict.keys())
-    #scores = list(sorted_dict.values())
-    total = 10
-    game = 'quiz'
-    payload = [{'teamName': teams, 'score': scores, 'total': total, 'game': game} for teams, scores in sorted_dict.items()]
-    return payload
-
-# Main function basically
+# The old module had 4 functions lmfao XD
+# Learnt some JOIN queries and figured out we could do this shit instead.
+# Go figure, this is absolute cinema T_T
+# So moving this shit to a different file, refer legacy for old shit or details
 def leaderboards():
     conn, cursor = cursorcall()
-    userids = get_userids(cursor)
-    teamids = get_teamids(cursor, userids)
-    teamnames = get_teamnames(cursor, teamids)
-    scores = get_score(cursor, userids)
-    sorted_dict = get_dict(teamnames, scores)
-    payload = get_payload(sorted_dict)
-    response = {"leaderboard": payload}
-    return response
+    try:
+        cursor.execute("""
+            SELECT t.team_name, s.score, s.total
+            FROM scores s
+            JOIN users u ON s.user_id = u.id
+            JOIN teams t ON u.team_id = t.id
+            ORDER BY s.score DESC
+        """)
+        rows = cursor.fetchall()
+        payload = [
+            {"teamName": row["team_name"], "score": row["score"], "total": row["total"], "game": "quiz"}
+            for row in rows
+        ]
+        return {"leaderboard": payload}
+    except Exception as e:
+        return {"leaderboard": [], "error": str(e)}
+    finally:
+        conn.close()

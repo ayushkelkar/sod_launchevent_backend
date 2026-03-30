@@ -1,4 +1,4 @@
-from flask_main import request
+from flask import request
 from teams_creation import cursorcall
 import jwt
 import os
@@ -17,65 +17,58 @@ import os
 # Let the secret key also be here. I'll implement it as it should be once this shit actually works.
 # SECRET_KEY = "I don't know what the hell to put here"
 SECRET = os.environ.get("SECRET_KEY")
-# The following function is a prototype for exception handling. I don't know try-except, so its commented out. I won't use this for now.
-"""
+
+# Yeah so implemented the try-except thing and just shited this to a new file altogether, fuck the old one. Too many changes to be done, it gets convoluted real fucking fast.
 def decodejwt(token):
     try:
-        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
-        print(decoded)
+        decoded = jwt.decode(token, SECRET, algorithms=["HS256"])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return None
     except jwt.InvalidTokenError:
-        decoded = None  # invalid token at all
-        is_expired = True  # treat invalid as expired / not valid
-    else:
-        # check expiration manually
-        exp = decoded.get("exp")
-        if exp is None or exp < int(time.time()):
-            is_expired = True
-        else:
-            is_expired = False
-    return is_expired
-"""
+        return None
 
-def decodejwt(token):
-    decoded = jwt.decode(token, SECRET, algorithms=["HS256"])
-    # So now we have the original payload that flask gets I guess.
-    return decoded
-
-# Will check if the username is present in the users table. Not exactly good compared to using jwt implementations, but it works, barely.
+# return user was potentially gonna return "None" which breaks SQLite in a nutshell and would've caused a fucking catastrophe. Fixed that.
 def is_in_db(cursor, username):
     cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
-    if(user["username"] == username):
-        return True
-    else:
-        return False
+    return user is not None
 
 def getuserid(cursor, username):
     cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
     row = cursor.fetchone()
     if row:
-        userid = row["id"]
-        print(userid)
-        return userid
+        return row["id"]
+    return None
 
+# This also returned nothing so fixed that as well, or else frontend would bitch about it.
 def team_score(payload):
     auth_header = request.headers.get("Authorization")
-    print(auth_header)
-    if auth_header:
-        parts = auth_header.split()
-        if len(parts) == 2 and parts[0].lower() == "bearer":
-            token = parts[1].strip()  # this is the actual JWT
-            print(token)
-        else:
-            token = None
-    else:
-        token = None
+    if not auth_header:
+        return {"success": False, "message": "No token provided"}
+    
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return {"success": False, "message": "Invalid token format"}
+    
+    token = parts[1].strip()
     userdetails = decodejwt(token)
+    
+    if userdetails is None:
+        return {"success": False, "message": "Invalid or expired token"}
+    
     conn, cursor = cursorcall()
-    username  = userdetails["username"]
-    userid = getuserid(cursor, username)
-    yesorno = is_in_db(cursor, username) # So this is the authentication part. True if user exists in the db, False otherwise.
-    if yesorno is True:
+    try:
+        username = userdetails["username"]
+        if not is_in_db(cursor, username):
+            return {"success": False, "message": "User not found"}
+        userid = getuserid(cursor, username)
         score = payload["score"]
         cursor.execute("INSERT INTO scores (user_id, score) VALUES (?, ?)", (userid, score))
         conn.commit()
+        return {"success": True, "message": "Score saved"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "message": str(e)}
+    finally:
+        conn.close()

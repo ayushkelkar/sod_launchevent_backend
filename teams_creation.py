@@ -50,7 +50,8 @@ def insert_members(cursor, all_team_members, teamid):
         member_ids.append(cursor.lastrowid)
     return member_ids
 
-
+# Commenting this out idk if the new function will work or not
+"""
 def create_team(payload):
     conn, cursor = cursorcall()
     teamid = insert_teams(cursor, payload)
@@ -59,3 +60,23 @@ def create_team(payload):
     member_ids = insert_members(cursor, all_team_members, teamid)
     conn.commit()
     conn.close()
+"""
+
+# New function which returns a function so that frontend doesn't receive NULL everytime
+def create_team(payload):
+    conn, cursor = cursorcall()
+    try:
+        teamid = insert_teams(cursor, payload)
+        user_ids = insert_users(cursor, payload, teamid)
+        all_team_members = [payload['leaderUsername']] + payload['members']
+        member_ids = insert_members(cursor, all_team_members, teamid)
+        conn.commit()
+        return {"success": True, "message": "Team created successfully", "team_id": teamid}
+    except sqlite3.IntegrityError as e:
+        conn.rollback()
+        return {"success": False, "message": "Team name or username already exists"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "message": str(e)}
+    finally:
+        conn.close()

@@ -24,6 +24,8 @@ import os
 
 # So login works with valid credentials. However, login with invalid credentials is messy, doesn't work right, and kind of weird. Will see later.
 
+# 30-03-2026 21:10 - Trying try-except for invalid login thing. Will see if it works.
+
 # SECRET_KEY = "I don't know what the hell to put here"
 
 SECRET = os.environ.get("SECRET_KEY")
@@ -50,16 +52,27 @@ def jwtthing(payload):
     token = jwt.encode(d1, SECRET, algorithm="HS256")
     return token
 
+# Yeah so why login was working with invalid creds was that jwtthing was called before checking if the user existed.
+# Also, using payload for building the JWT is quite dangerous, so applied a different shit, user_info for that instead.
 def team_login(payload):
-    username = payload['username']
-    password = payload['password']
+    username = payload.get('username')
+    password = payload.get('password')
+    
+    if not username or not password:
+        return {"success": False, "message": "Missing credentials"}
+    
     conn, cursor = cursorcall()
-    user_info = teams_check(cursor, username, password)
-    token = jwtthing(payload)
-    if user_info == None:
-        return {"message": "Invalid credentials"}
-    response = {
-        "token": token,
-        "user": user_info
+    try:
+        user_info = teams_check(cursor, username, password)
+        if user_info is None:
+            return {"success": False, "message": "Invalid credentials"}
+        token = jwtthing(user_info.copy())  # Pass user_info, NOT raw payload. Never put passwords in a JWT.
+        return {
+            "success": True,
+            "token": token,
+            "user": user_info
         }
-    return response
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+    finally:
+        conn.close()
