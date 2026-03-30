@@ -11,6 +11,7 @@ from teams_creation import create_team
 from login import team_login
 from score import team_score
 from leaderboard import leaderboards
+from admin import get_users, toggle_quiz, get_status
 
 # Defining the main Flask app:
 app = Flask(__name__)
@@ -39,11 +40,27 @@ def login():
     status_code = 200 if result.get("success") else 401
     return jsonify(result), status_code
 
+# Commenting this out for now. Implementing admin module's actual quiz config
+"""
 # Event Status Module:
 @app.route('/api/quiz/status', methods=['GET'])
 def status():
     payload = { "enabled": True } # This is a bool value
     return jsonify(payload)
+"""
+
+"""
+@app.route('/api/quiz/status', methods=['GET'])
+def status():
+    return jsonify(get_status())
+"""
+
+# Will make this shit tomorrow I guess.
+# New Quiz Toggle thing
+@app.route('/api/admin/quiz-status', methods=['POST'])
+def toggle():
+    result = toggle_quiz()
+    return jsonify(result)
 
 # Score Module:
 @app.route('/api/quiz/score', methods=['POST'])
@@ -56,6 +73,12 @@ def score():
 @app.route('/api/leaderboard', methods=['GET'])
 def leaderboard_main():
     result = leaderboards()
+    return jsonify(result)
+
+# Admin Module:
+@app.route('/api/admin/users', methods=['GET'])
+def admin_users():
+    result = get_users()
     return jsonify(result)
 
 if __name__ == '__main__':

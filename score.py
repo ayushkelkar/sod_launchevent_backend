@@ -42,6 +42,7 @@ def getuserid(cursor, username):
     return None
 
 # This also returned nothing so fixed that as well, or else frontend would bitch about it.
+# Also teams can't post their scores more than once so added a check for that
 def team_score(payload):
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -64,6 +65,10 @@ def team_score(payload):
             return {"success": False, "message": "User not found"}
         userid = getuserid(cursor, username)
         score = payload["score"]
+        cursor.execute("SELECT id FROM scores WHERE user_id = ?", (userid,))
+        existing = cursor.fetchone()
+        if existing:
+            return {"success": False, "message": "Score already submitted"}
         cursor.execute("INSERT INTO scores (user_id, score) VALUES (?, ?)", (userid, score))
         conn.commit()
         return {"success": True, "message": "Score saved"}
