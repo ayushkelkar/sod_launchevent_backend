@@ -1,21 +1,19 @@
 from teams_creation import cursorcall
 
-def toggle_quiz():
+def set_quiz_status(enabled):
     conn, cursor = cursorcall()
     try:
-        cursor.execute("SELECT enabled FROM quiz_config WHERE id = 1")
+        cursor.execute("SELECT id FROM quiz_config WHERE id = 1")
         row = cursor.fetchone()
         if row is None:
-            cursor.execute("INSERT INTO quiz_config (id, enabled) VALUES (1, 1)")
-            new_state = 1
+            cursor.execute("INSERT INTO quiz_config (id, enabled) VALUES (1, ?)", (1 if enabled else 0,))
         else:
-            new_state = 0 if row["enabled"] else 1
-            cursor.execute("UPDATE quiz_config SET enabled = ? WHERE id = 1", (new_state,))
+            cursor.execute("UPDATE quiz_config SET enabled = ? WHERE id = 1", (1 if enabled else 0,))
         conn.commit()
-        return {"success": True, "enabled": bool(new_state)}
+        return {"message": "Quiz is now LIVE" if enabled else "Quiz is now OFFLINE"}
     except Exception as e:
         conn.rollback()
-        return {"success": False, "error": str(e)}
+        return {"message": str(e)}
     finally:
         conn.close()
 
@@ -41,9 +39,9 @@ def get_users():
         """)
         rows = cursor.fetchall()
         users = [
-            {"username": row["username"], "role": row["role"], "teamName": row["team_name"]}
-            for row in rows
-        ]
+                    {"username": row["username"], "role": row["role"], "teamName": row["team_name"], "createdAt": row["created_at"]}
+                    for row in rows
+                ]
         return {"success": True, "users": users}
     except Exception as e:
         return {"success": False, "users": [], "error": str(e)}

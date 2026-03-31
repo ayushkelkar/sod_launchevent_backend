@@ -11,7 +11,7 @@ from teams_creation import create_team
 from login import team_login
 from score import team_score
 from leaderboard import leaderboards
-from admin import get_users, toggle_quiz, get_status
+from admin import get_users, set_quiz_status, get_status
 
 # Defining the main Flask app:
 app = Flask(__name__)
@@ -59,7 +59,9 @@ def status():
 # New Quiz Toggle thing
 @app.route('/api/admin/quiz-status', methods=['POST'])
 def toggle():
-    result = toggle_quiz()
+    payload = request.get_json()
+    enabled = payload.get("enabled", False)
+    result = set_quiz_status(enabled)
     return jsonify(result)
 
 # Score Module:
