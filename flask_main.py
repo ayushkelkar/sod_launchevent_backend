@@ -13,6 +13,7 @@ from score import team_score
 from leaderboard import leaderboards
 from admin import get_users, set_quiz_status, get_status
 
+
 # Defining the main Flask app:
 app = Flask(__name__)
 CORS(app)
@@ -82,6 +83,10 @@ def leaderboard_main():
 def admin_users():
     result = get_users()
     return jsonify(result)
+
+@app.route('/api/quiz/status', methods=['GET'])
+def status():
+    return jsonify(get_status())
 
 if __name__ == '__main__':
     app.run(debug = True)

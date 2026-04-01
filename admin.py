@@ -6,9 +6,9 @@ def set_quiz_status(enabled):
         cursor.execute("SELECT id FROM quiz_config WHERE id = 1")
         row = cursor.fetchone()
         if row is None:
-            cursor.execute("INSERT INTO quiz_config (id, enabled) VALUES (1, ?)", (1 if enabled else 0,))
+            cursor.execute("INSERT INTO quiz_config (id, enabled) VALUES (1, %s)", (1 if enabled else 0,))
         else:
-            cursor.execute("UPDATE quiz_config SET enabled = ? WHERE id = 1", (1 if enabled else 0,))
+            cursor.execute("UPDATE quiz_config SET enabled = %s WHERE id = 1", (1 if enabled else 0,))
         conn.commit()
         return {"message": "Quiz is now LIVE" if enabled else "Quiz is now OFFLINE"}
     except Exception as e:
@@ -32,11 +32,11 @@ def get_users():
     conn, cursor = cursorcall()
     try:
         cursor.execute("""
-            SELECT u.username, u.role, t.team_name
+            SELECT u.username, u.role, u.created_at as created_at, t.team_name as team_name
             FROM users u
             JOIN teams t ON u.team_id = t.id
             ORDER BY t.team_name, u.role DESC
-        """)
+            """)
         rows = cursor.fetchall()
         users = [
                     {"username": row["username"], "role": row["role"], "teamName": row["team_name"], "createdAt": row["created_at"]}
@@ -44,6 +44,8 @@ def get_users():
                 ]
         return {"success": True, "users": users}
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {"success": False, "users": [], "error": str(e)}
     finally:
         conn.close()

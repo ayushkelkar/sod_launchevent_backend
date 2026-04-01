@@ -3,3 +3,4 @@ notes_stuff/
 backups/
 log/
 __pycache__/
+.env

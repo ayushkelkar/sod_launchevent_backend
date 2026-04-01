@@ -1,52 +1,53 @@
-# File to setup master.db
-# Note: This master.db will be within logo_launch.
+# File to setup PostgreSQL database
+# Connects to Render's hosted Postgres and creates all tables
 
-import sqlite3
+import psycopg2
 import os
+from dotenv import load_dotenv
 
-# Connecting to master.db thats within this folder
-dbpath = os.path.join(os.path.dirname(__file__), 'master.db')
-conn = sqlite3.connect(dbpath)
+load_dotenv()
+
+conn = psycopg2.connect(os.getenv("DATABASE_URL"))
 cursor = conn.cursor()
 
 # Create tables if they don't exist
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS teams (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     team_name TEXT UNIQUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 """)
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     username TEXT UNIQUE,
     password_hash TEXT,
     team_id INTEGER,
     role TEXT DEFAULT 'member',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(team_id) REFERENCES teams(id)
 )
 """)
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS members (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name TEXT,
     team_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(team_id) REFERENCES teams(id)
 )
 """)
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS scores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     user_id INTEGER,
     score INTEGER,
-    total INTEGER DEFAULT 10,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    total INTEGER DEFAULT 3,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
 )
 """)
@@ -58,6 +59,19 @@ CREATE TABLE IF NOT EXISTS quiz_config (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS hunt_scores (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE,
+    team_id INTEGER,
+    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(team_id) REFERENCES teams(id)
+)
+""")
+
 # Commit changes and close connection
 conn.commit()
 conn.close()
+
+print("All tables created successfully!")

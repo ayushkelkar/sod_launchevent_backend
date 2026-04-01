@@ -26,17 +26,19 @@ import os
 
 # 30-03-2026 21:10 - Trying try-except for invalid login thing. Will see if it works.
 
-# SECRET_KEY = "I don't know what the hell to put here"
+SECRET = "?^Ec}WTpFlYaGQ#|7_jba4mIN;NT%sI52-l-c]IALglv/-Bn%sJJ6qsy'`7@JF[)%sLnUo!+Q)_r#w3yBOvca_,"
 
-SECRET = os.environ.get("SECRET_KEY")
+#SECRET = os.environ.get("SECRET_KEY")
 
 def teams_check(cursor, username, password):
-    cursor.execute("SELECT * FROM users WHERE username = ? AND password_hash = ?", (username, password))
+    print(f"Checking: username='{username}' password='{password}'")
+    cursor.execute("SELECT * FROM users WHERE username = %s AND password_hash = %s", (username, password))
     row = cursor.fetchone()
+    print(f"Row found: {row}")
     if row == None:
         return None
     teamid = row["team_id"]
-    cursor.execute("SELECT team_name FROM teams WHERE id = ?", (teamid,))
+    cursor.execute("SELECT team_name FROM teams WHERE id = %s", (teamid,))
     teamsrow = cursor.fetchone()
     user_info = {
         "id": row["id"],
@@ -47,8 +49,15 @@ def teams_check(cursor, username, password):
     return user_info
 
 def jwtthing(payload):
-    d1 = payload
-    d1['exp'] = datetime.datetime.now() + datetime.timedelta(hours=2)
+    import datetime as dt
+    d1 = {
+        "id": str(payload['id']),
+        "username": str(payload['username']),
+        "teamName": str(payload['teamName']),
+        "role": str(payload['role']),
+        "exp": int((dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=2)).timestamp())
+    }
+    print(f"JWT payload: {d1}")
     token = jwt.encode(d1, SECRET, algorithm="HS256")
     return token
 
@@ -64,6 +73,7 @@ def team_login(payload):
     conn, cursor = cursorcall()
     try:
         user_info = teams_check(cursor, username, password)
+        print(f"user_info: {user_info}")
         if user_info is None:
             return {"success": False, "message": "Invalid credentials"}
         token = jwtthing(user_info.copy())  # Pass user_info, NOT raw payload. Never put passwords in a JWT.
@@ -73,6 +83,7 @@ def team_login(payload):
             "user": user_info
         }
     except Exception as e:
+        print(f"Exception: {e}")
         return {"success": False, "message": str(e)}
     finally:
         conn.close()
