@@ -22,7 +22,7 @@ def leaderboards():
             FROM scores s
             JOIN users u ON s.user_id = u.id
             JOIN teams t ON u.team_id = t.id
-            ORDER BY s.score DESC
+            ORDER BY s.score DESC, s.created_at ASC
         """)
         rows = cursor.fetchall()
         payload = [
